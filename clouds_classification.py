@@ -165,7 +165,7 @@ class CloudsClassifier:
         print(f"Modèle construit avec {base_model_name} comme base.")
         self.model.summary()
 
-    def train(self, epochs=50, fine_tune_epochs=10, save_path=None):
+    def train(self, epochs=50, fine_tune_epochs=10, model_name=None):
         """Entraîne le modèle construit."""
         if not self.model:
             raise RuntimeError(
@@ -227,9 +227,12 @@ class CloudsClassifier:
         else:
             print("Aucun modèle de base trouvé, la phase de fine-tuning est sautée.")
 
-        if save_path:
-            os.makedirs("models", exist_ok=True)
-            self.model.save("models" + save_path + ".keras")
+        if model_name:
+            save_dir = "models"
+            os.makedirs(save_dir, exist_ok=True)
+            full_path = os.path.join(save_dir, f"{model_name}.keras")
+            self.model.save(full_path)
+            print(f"Modèle sauvegardé dans {full_path}")
 
     def load_model(self, model_path):
         """

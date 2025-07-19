@@ -1,5 +1,5 @@
 __pycache__/
 *.pyc
 logs/
-*dev*
+dev_clouds_classification.ipynb
 .DS_Store
