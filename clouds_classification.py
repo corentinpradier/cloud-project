@@ -228,7 +228,14 @@ class CloudsClassifier:
         try:
             full_model_path = os.path.join("models", model_path)
             self.model = tf.keras.models.load_model(full_model_path)
+
+            input_shape = self.model.input_shape
+            self.img_height = input_shape[1]
+            self.img_width = input_shape[2]
+
             print(f"Modèle chargé avec succès depuis {model_path}")
+            print(f"Dimensions d'entrée du modèle mises à jour : {self.img_height}x{self.img_width}")
+        
         except Exception as e:
             print(f"Erreur lors du chargement du modèle : {e}")
             raise
@@ -264,35 +271,38 @@ class CloudsClassifier:
         if hasattr(self, "fine_tune_history"):
             self._plot_history(self.fine_tune_history, "Phase 2: Fine-Tuning")
 
-    def _prepare_image(self, image_path):
-        """Charge une image et la prépare pour le modèle."""
+    def _load_image_for_prediction(self, image_path):
+        """Charge une image depuis un chemin et la convertit en tableau NumPy."""
         img = tf.keras.utils.load_img(
             image_path, target_size=(self.img_height, self.img_width)
         )
         img_array = tf.keras.utils.img_to_array(img)
-        # Ajouter une dimension de lot (batch) car le modèle s'attend à un lot d'images
-        img_array_expanded = np.expand_dims(img_array, axis=0)
-        return img_array_expanded
-
-    def predict(self, image_path, show_image=True):
-        """Effectue une prédiction sur une image donnée."""
+        return img, img_array
+    
+    def predict_from_array(self, img_array):
+        """Effectue une prédiction sur un tableau NumPy d'image."""
         if not self.model:
             raise RuntimeError("Le modèle n'est pas chargé. Utilisez `build_model()` ou `load_model()` d'abord.")
+        
+        img_resized = tf.image.resize(img_array, [self.img_height, self.img_width])
+        img_array_expanded = np.expand_dims(img_resized, axis=0)
 
-
-        prepped_image = self._prepare_image(image_path)
-
-        predictions = self.model.predict(prepped_image)
-
+        predictions = self.model.predict(img_array_expanded)
         predicted_class_index = np.argmax(predictions[0])
         confidence = 100 * np.max(predictions[0])
         predicted_class_name = self.class_names[predicted_class_index]
+
+        return predicted_class_name, confidence
+
+    def predict(self, image_path, show_image=True):
+        """Effectue une prédiction sur une image donnée."""
+        img, img_array = self._load_image_for_prediction(image_path)
+        predicted_class_name, confidence = self.predict_from_array(img_array)
 
         title = f"Prédiction: {predicted_class_name} ({confidence:.2f}%)"
         print(title)
 
         if show_image:
-            img = tf.keras.utils.load_img(image_path)
             plt.imshow(img)
             plt.title(title)
             plt.axis("off")
