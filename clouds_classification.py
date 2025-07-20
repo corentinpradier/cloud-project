@@ -226,7 +226,8 @@ class CloudsClassifier:
             model_path (str): Chemin vers le fichier du modèle sauvegardé.
         """
         try:
-            self.model = tf.keras.models.load_model(model_path)
+            full_model_path = os.path.join("models", model_path)
+            self.model = tf.keras.models.load_model(full_model_path)
             print(f"Modèle chargé avec succès depuis {model_path}")
         except Exception as e:
             print(f"Erreur lors du chargement du modèle : {e}")
