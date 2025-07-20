@@ -42,13 +42,17 @@ class CloudsClassifier:
         print("\nLes datasets sont prêts.")
 
     def _load_and_resize_image(self, path: str, label: int):
-        """Charge une image depuis un chemin, la décode et la redimensionne."""
+        """Charge une image depuis un chemin, la décode et la redimensionne.
+        
+        Args:
+            path (str): Chemin vers l'image.
+            label (int): Label de la classe de l'image.
+        """
         img_bytes = tf.io.read_file(path)
         img = tf.io.decode_image(img_bytes, channels=3, expand_animations=False)
         img = tf.image.resize(img, [self.img_height, self.img_width])
         return img, label
 
-    # --- 3. Fonction réutilisable pour créer un dataset depuis un dossier et un CSV ---
     def _create_dataset_from_csv(self, image_dir, csv_path, is_training=True):
         """
         Crée un tf.data.Dataset complet à partir d'un dossier d'images et d'un fichier CSV.
@@ -64,16 +68,13 @@ class CloudsClassifier:
         """
         print(f"Chargement des données depuis : {image_dir}")
 
-        # Lire le fichier CSV
         df = pd.read_csv(csv_path)
         df.rename(columns={df.columns[0]: "filename"}, inplace=True)
 
-        # Créer les chemins complets vers les images
         df["full_path"] = df["filename"].apply(
             lambda name: os.path.join(image_dir, name)
         )
 
-        # Extraire les chemins et les labels
         image_paths = df["full_path"].values
         label_columns = df.drop(columns=["filename", "full_path"])
         labels = label_columns.values
@@ -83,20 +84,15 @@ class CloudsClassifier:
             f"Chargement depuis '{image_dir}': {len(image_paths)} images trouvées pour les classes {class_names}."
         )
 
-        # Créer le dataset de base (chemins, labels)
         path_label_ds = tf.data.Dataset.from_tensor_slices((image_paths, labels))
-        # Appliquer la fonction de chargement et de prétraitement
+
         image_label_ds = path_label_ds.map(
             self._load_and_resize_image, num_parallel_calls=self.autotune
         )
 
-        # Appliquer le brassage (shuffle) SEULEMENT pour l'ensemble d'entraînement
         if is_training:
-            # La taille du buffer est souvent fixée à la taille totale du dataset
-            # pour un brassage complet
             image_label_ds = image_label_ds.shuffle(buffer_size=len(image_paths))
 
-        # Appliquer le batching et le prefetching
         final_dataset = image_label_ds.batch(self.batch_size).prefetch(
             buffer_size=self.autotune
         )
@@ -115,14 +111,12 @@ class CloudsClassifier:
             "MobileNetV2": tf.keras.applications.MobileNetV2,
             "ResNet50V2": tf.keras.applications.ResNet50V2,
             "VGG16": tf.keras.applications.VGG16,
-            # Ajoutez d'autres modèles ici
         }
 
         PREPROCESSORS = {
             tf.keras.applications.MobileNetV2: tf.keras.applications.mobilenet_v2.preprocess_input,
             tf.keras.applications.ResNet50V2: tf.keras.applications.resnet_v2.preprocess_input,
             tf.keras.applications.VGG16: tf.keras.applications.vgg16.preprocess_input,
-            # Ajoutez d'autres modèles ici
         }
 
         base_model_class = MODEL_REGISTRY.get(base_model_name)
@@ -140,14 +134,12 @@ class CloudsClassifier:
             weights="imagenet",
         )
 
-        # 1. Freeze le modèle
         self.base_model.trainable = False
 
-        # 3. Construire le nouveau modèle avec l'API Fonctionnelle
         inputs = tf.keras.Input(shape=(self.img_height, self.img_width, 3))
         x = layers.RandomFlip("horizontal")(inputs)
         x = layers.RandomRotation(0.1)(x)
-        x = preprocess_input(x)  # Utiliser le bon pré-processeur
+        x = preprocess_input(x)
         x = self.base_model(x, training=False)
         x = layers.GlobalAveragePooling2D()(x)
         x = layers.Dropout(0.2)(x)
@@ -155,7 +147,6 @@ class CloudsClassifier:
 
         self.model = tf.keras.Model(inputs, outputs)
 
-        # 4. Compiler le modèle
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
         self.model.compile(
             optimizer=optimizer,
@@ -172,7 +163,6 @@ class CloudsClassifier:
                 "Vous devez d'abord construire le modèle avec `build_model()`."
             )
 
-        # Callbacks
         logdir = "logs"
         tensorboard_callback = tf.keras.callbacks.TensorBoard(
             log_dir=logdir, histogram_freq=1
@@ -182,7 +172,6 @@ class CloudsClassifier:
         )
         callbacks = [tensorboard_callback, early_stopping_callback]
 
-        # --- Phase 1: Entraînement de la tête de classification ---
         print("\n--- Phase 1: Entraînement de la tête de classification ---")
         history = self.model.fit(
             self.train_data,
@@ -193,18 +182,14 @@ class CloudsClassifier:
 
         self.history = history
 
-        # --- Phase 2: Fine-tuning ---
         print("\n--- Phase 2: Début de la phase de Fine-Tuning ---")
-
         if self.base_model and fine_tune_epochs > 0:
             self.base_model.trainable = True
 
-            # Geler les premières couches et dégeler le reste
             fine_tune_at = 100
             for layer in self.base_model.layers[:fine_tune_at]:
                 layer.trainable = False
 
-            # Re-compiler avec un taux d'apprentissage très faible
             optimizer_fine_tune = tf.keras.optimizers.Adam(learning_rate=1e-5)
             self.model.compile(
                 optimizer=optimizer_fine_tune,
@@ -212,7 +197,6 @@ class CloudsClassifier:
                 metrics=["accuracy"],
             )
 
-            # Continuer l'entraînement
             initial_epoch = history.epoch[-1] + 1
             fine_tune_history = self.model.fit(
                 self.train_data,
@@ -252,21 +236,21 @@ class CloudsClassifier:
         """Trace les courbes d'apprentissage pour la perte et l'exactitude."""
         plt.figure(figsize=(12, 4))
 
-        # Plot training & validation accuracy values
-        plt.subplot(1, 2, 1)
-        plt.plot(history.history["accuracy"])
-        plt.plot(history.history["val_accuracy"])
-        plt.title(f"{title} - Model accuracy")
-        plt.ylabel("Accuracy")
-        plt.xlabel("Epoch")
-        plt.legend(["Train", "Validation"], loc="upper left")
-
         # Plot training & validation loss values
-        plt.subplot(1, 2, 2)
+        plt.subplot(1, 2, 1)
         plt.plot(history.history["loss"])
         plt.plot(history.history["val_loss"])
         plt.title(f"{title} - Model loss")
         plt.ylabel("Loss")
+        plt.xlabel("Epoch")
+        plt.legend(["Train", "Validation"], loc="upper left")
+
+        # Plot training & validation accuracy values
+        plt.subplot(1, 2, 2)
+        plt.plot(history.history["accuracy"])
+        plt.plot(history.history["val_accuracy"])
+        plt.title(f"{title} - Model accuracy")
+        plt.ylabel("Accuracy")
         plt.xlabel("Epoch")
         plt.legend(["Train", "Validation"], loc="upper left")
 
@@ -289,8 +273,11 @@ class CloudsClassifier:
         img_array_expanded = np.expand_dims(img_array, axis=0)
         return img_array_expanded
 
-    def predict(self, image_path):
+    def predict(self, image_path, show_image=True):
         """Effectue une prédiction sur une image donnée."""
+        if not self.model:
+            raise RuntimeError("Le modèle n'est pas chargé. Utilisez `build_model()` ou `load_model()` d'abord.")
+
 
         prepped_image = self._prepare_image(image_path)
 
@@ -300,8 +287,14 @@ class CloudsClassifier:
         confidence = 100 * np.max(predictions[0])
         predicted_class_name = self.class_names[predicted_class_index]
 
-        print(
-            f"La classe prédite est: {predicted_class_name} avec une confiance de {confidence:.2f}%"
-        )
+        title = f"Prédiction: {predicted_class_name} ({confidence:.2f}%)"
+        print(title)
+
+        if show_image:
+            img = tf.keras.utils.load_img(image_path)
+            plt.imshow(img)
+            plt.title(title)
+            plt.axis("off")
+            plt.show()
 
         return predicted_class_name, confidence
