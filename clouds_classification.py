@@ -30,6 +30,18 @@ class CloudsClassifier:
         self.model = None
         self.base_model = None
 
+        self.model_registry = {
+            "MobileNetV2": tf.keras.applications.MobileNetV2,
+            "ResNet50V2": tf.keras.applications.ResNet50V2,
+            "VGG16": tf.keras.applications.VGG16,
+        }
+
+        self.preprocessors = {
+            tf.keras.applications.MobileNetV2: tf.keras.applications.mobilenet_v2.preprocess_input,
+            tf.keras.applications.ResNet50V2: tf.keras.applications.resnet_v2.preprocess_input,
+            tf.keras.applications.VGG16: tf.keras.applications.vgg16.preprocess_input,
+        }
+
         print("Création du dataset d'entraînement...")
         self.train_data, self.class_names = self._create_dataset_from_csv(
             self.train_dir, self.train_csv_path, is_training=True
@@ -98,6 +110,20 @@ class CloudsClassifier:
         )
 
         return final_dataset, class_names
+    
+    def add_model(self, name: str, model_class, preprocess_function):
+        """
+        Ajoute dynamiquement un nouveau modèle et sa fonction de pré-traitement au registre.
+
+        Args:
+            name (str): Le nom à donner au modèle (ex: "EfficientNetB0").
+            model_class: La classe du modèle Keras (ex: tf.keras.applications.EfficientNetB0).
+            preprocess_function: La fonction de pré-traitement associée (ex: tf.keras.applications.efficientnet.preprocess_input).
+        """
+        self.model_registry[name] = model_class
+        self.preprocessors[model_class] = preprocess_function
+        print(f"Modèle '{name}' ajouté au registre avec succès.")
+
 
     def build_model(self, base_model_name: str, learning_rate=0.001):
         """
@@ -107,26 +133,14 @@ class CloudsClassifier:
             base_model_name (str): Le nom du modèle pré-entraîné à utiliser (ex: "MobileNetV2").
             learning_rate (float): Le taux d'apprentissage pour l'optimiseur.
         """
-        MODEL_REGISTRY = {
-            "MobileNetV2": tf.keras.applications.MobileNetV2,
-            "ResNet50V2": tf.keras.applications.ResNet50V2,
-            "VGG16": tf.keras.applications.VGG16,
-        }
-
-        PREPROCESSORS = {
-            tf.keras.applications.MobileNetV2: tf.keras.applications.mobilenet_v2.preprocess_input,
-            tf.keras.applications.ResNet50V2: tf.keras.applications.resnet_v2.preprocess_input,
-            tf.keras.applications.VGG16: tf.keras.applications.vgg16.preprocess_input,
-        }
-
-        base_model_class = MODEL_REGISTRY.get(base_model_name)
+        base_model_class = self.model_registry.get(base_model_name)
         if not base_model_class:
             raise ValueError(
                 f"Le nom du modèle '{base_model_name}' n'est pas reconnu. "
-                f"Modèles disponibles : {list(MODEL_REGISTRY.keys())}"
+                f"Modèles disponibles : {list(self.model_registry.keys())}"
             )
 
-        preprocess_input = PREPROCESSORS.get(base_model_class)
+        preprocess_input = self.preprocessors.get(base_model_class)
 
         self.base_model = base_model_class(
             input_shape=(self.img_height, self.img_width, 3),
@@ -156,7 +170,7 @@ class CloudsClassifier:
         print(f"Modèle construit avec {base_model_name} comme base.")
         self.model.summary()
 
-    def train(self, epochs=50, fine_tune_epochs=10, model_name=None):
+    def train(self, epochs=50, fine_tune_epochs=10, model_name=None, learning_rate_ft=0.001):
         """Entraîne le modèle construit."""
         if not self.model:
             raise RuntimeError(
@@ -190,7 +204,7 @@ class CloudsClassifier:
             for layer in self.base_model.layers[:fine_tune_at]:
                 layer.trainable = False
 
-            optimizer_fine_tune = tf.keras.optimizers.Adam(learning_rate=1e-5)
+            optimizer_fine_tune = tf.keras.optimizers.Adam(learning_rate=learning_rate_ft)
             self.model.compile(
                 optimizer=optimizer_fine_tune,
                 loss=tf.keras.losses.CategoricalCrossentropy(),
