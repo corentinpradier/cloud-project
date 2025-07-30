@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloudproject"
+version = "0.1"
+authors = [
+    {name="Corentin Pradier", email="corentinpradier@gmail.com"},
+]
+description = "A minimal cloudproject package."
+readme = ""
+requires-python = ">=3.6"
+license = {text = "MIT"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

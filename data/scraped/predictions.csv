@@ -1,0 +1,6 @@
+image_name,prediction
+data/scraped/nuage_202507302024.png,nimbostratus
+data/scraped/nuage_202507302030.png,nimbostratus
+data/scraped/nuage_202507302100.png,cirrocumulus
+data/scraped/nuage_202507302102.png,stratus
+data/scraped/nuage_202507302214.png,stratus

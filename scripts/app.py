@@ -1,9 +1,9 @@
 import gradio as gr
-from clouds_classification import CloudsClassifier
+from clouds_classifier import CloudsClassifier
 import numpy as np
 
-TRAIN_DIR = "dataset/train"
-VALID_DIR = "dataset/valid"
+TRAIN_DIR = "data/dataset/train"
+VALID_DIR = "data/dataset/valid"
 IMG_HEIGHT = 200
 IMG_WIDTH = 200
 BATCH_SIZE = 32
