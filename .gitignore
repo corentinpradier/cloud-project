@@ -205,3 +205,4 @@ __marimo__/
 # Local configuration files
 models/
 logs/
+.DS_Store
