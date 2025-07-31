@@ -12,13 +12,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from src.cloudproject.clouds_classifier import CloudsClassifier
+from cloudproject import CloudsClassifier
 
 train_dir = "data/dataset/train"
 valid_dir = "data/dataset/valid"
 img_height = 200
 img_width = 200
 batch_size = 32
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 model_name = "ResNet50V2"
 model_path = PROJECT_ROOT / (model_name + ".keras")

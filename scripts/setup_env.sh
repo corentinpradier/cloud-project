@@ -1,39 +1,49 @@
 #!/bin/bash
 
-# --- Cloud Classifier Setup for macOS/Linux ---
+# --- Cloud Classifier Setup for macOS/Linux with Python 3.11 forced ---
 
 set -e # Exit immediately if a command exits with a non-zero status.
 
-# --- 1. Check for Python ---
-if ! command -v python3 &> /dev/null
-then
-    echo "ERREUR: python3 n'a pas été trouvé. Veuillez installer Python 3.8+."
+echo ""
+echo "⚙️  --- Setup CloudProject avec Python 3.11 ---"
+echo ""
+
+# --- 1. Localiser Python 3.11 ---
+PYTHON_BIN="/opt/homebrew/bin/python3.11"
+
+if [ ! -x "$PYTHON_BIN" ]; then
+    echo "❌ ERREUR : Python 3.11 non trouvé à $PYTHON_BIN"
+    echo "➡️  Installez-le avec : brew install python@3.11"
     exit 1
 fi
-echo "Python 3 trouvé : $(python3 --version)"
 
-# --- 2. Créer l'environnement virtuel ---
-if [ -d "venv" ]; then
-    echo "L'environnement virtuel 'venv' existe déjà. Création ignorée."
-else
-    echo "Création de l'environnement virtuel dans 'venv'..."
-    python3 -m venv venv
-fi
+PYTHON_VERSION=$($PYTHON_BIN -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+echo "✅ Python 3.11 détecté : version $PYTHON_VERSION"
 
-# --- 3. Activer l'environnement et installer les dépendances ---
+# --- 2. Supprimer ancien environnement virtuel ---
+rm -rf venv
+
+# --- 3. Créer l'environnement virtuel avec Python 3.11 ---
+echo "Création de l'environnement virtuel dans 'venv' avec Python 3.11..."
+$PYTHON_BIN -m venv venv
+
+# --- 4. Activer l'environnement virtuel ---
 echo "Activation de l'environnement virtuel..."
 source venv/bin/activate
 
+# --- 5. Mettre à jour pip, setuptools, wheel ---
 echo "Mise à jour des outils de base..."
 pip install --upgrade pip setuptools wheel
 
+# --- 6. Installer les dépendances depuis requirements.txt ---
 echo "Installation des dépendances Python depuis requirements.txt..."
 pip install -r requirements.txt
 
+# --- 7. Installer le package local en mode éditable ---
 echo "Installation du package local en mode éditable..."
 pip install -e .
 
-# --- 4. Installation du compilateur Protobuf (protoc) ---
+# --- 8. Installation du compilateur Protobuf (protoc) ---
 echo ""
 echo "--- Installation du compilateur Protobuf (protoc) ---"
 if command -v protoc &> /dev/null
@@ -64,7 +74,7 @@ else
     fi
 fi
 
-# --- 5. Configuration du noyau Jupyter ---
+# --- 9. Installation du noyau Jupyter ---
 echo ""
 echo "Installation du noyau Jupyter..."
 pip install ipykernel
