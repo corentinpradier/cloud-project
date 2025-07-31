@@ -8,88 +8,86 @@ A key feature is a Selenium-based script that automatically captures images from
 
 ---
 
-## Table des matières
-* [Fonctionnalités](#fonctionnalités)
-* [Structure du Projet](#structure-du-projet)
+## Table of Contents
+* [Features](#features)
+* [Project Structure](#project-structure)
 * [Installation](#installation)
-* [Utilisation](#utilisation)
+* [Usage](#usage)
 * [Dataset](#dataset)
-* [Technologies Utilisées](#technologies-utilisées)
+* [Technologies Used](#technologies-used)
 
-*(La suite du README est en français)*
+## Features
 
-## Fonctionnalités
+*   **Model Training:** Use the `CloudsClassifier` class to build, train, and fine-tune models based on well-known architectures like `ResNet50V2`, `MobileNetV2`, and `VGG16`.
+*   **Web Interface:** A Gradio application (`scripts/app.py`) allows you to upload an image and get an instant prediction of the cloud type.
+*   **Dataset Expansion:** A script (`src/cloudproject/expand_dataset.py`) uses Selenium to capture images from a live webcam, classify them, and save the results, enabling the dataset to grow over time.
+*   **Model Management:** Easily save and load trained models in `.keras` format.
+*   **Visualization:** Plot learning curves (loss and accuracy) with Matplotlib.
 
-*   **Entraînement de Modèles :** Utilisation de la classe `CloudsClassifier` pour construire, entraîner et affiner (fine-tune) des modèles basés sur des architectures reconnues comme `ResNet50V2`, `MobileNetV2`, et `VGG16`.
-*   **Interface Web :** Une application Gradio (`scripts/app.py`) permet de téléverser une image et d'obtenir une prédiction instantanée du type de nuage.
-*   **Extension du Dataset :** Un script (`src/cloudproject/expand_dataset.py`) utilise Selenium pour capturer des images depuis une webcam en direct, les classifie, et enregistre les résultats, permettant d'enrichir le dataset au fil du temps.
-*   **Gestion de Modèles :** Sauvegarde et chargement faciles des modèles entraînés au format `.keras`.
-*   **Visualisation :** Traçage des courbes d'apprentissage (perte et précision) avec Matplotlib.
-
-## Structure du Projet
+## Project Structure
 
 ```
 .
 ├── data/
-│   ├── dataset/          # Datasets d'entraînement et de validation
+│   ├── dataset/          # Training and validation datasets
 │   │   ├── train/
 │   │   └── valid/
-│   └── scraped/          # Images et prédictions issues du scraping
-├── models/               # Modèles entraînés sauvegardés (ex: ResNet50V2.keras)
+│   └── scraped/          # Images and predictions from scraping
+├── models/               # Saved trained models (e.g., ResNet50V2.keras)
 ├── scripts/
-│   ├── app.py            # Script de lancement de l'application Gradio
-│   └── setup_env.sh      # Script d'installation de l'environnement
+│   ├── app.py            # Gradio application launch script
+│   └── setup_env.sh      # Environment setup script
 ├── src/
 │   └── cloudproject/
 │       ├── __init__.py
-│       ├── classifier.py     # Classe principale du classifieur
-│       └── expand_dataset.py # Script de scraping pour étendre le dataset
+│       ├── classifier.py     # Main classifier class
+│       └── expand_dataset.py # Scraping script to expand the dataset
 ├── .gitignore
-├── README.md             # Ce fichier
-├── requirements.txt      # Dépendances Python
-└── setup.py              # Fichier de configuration du package local (supposé)
+├── README.md             # This file
+├── requirements.txt      # Python dependencies
+└── setup.py              # Local package configuration file (optional)
 ```
 
 ## Installation
 
-1.  **Cloner le dépôt :**
+1.  **Clone the repository:**
     ```bash
     git clone https://github.com/corentinpradier/cloud-project.git
     cd Clouds_classification
     ```
 
-2.  **Exécuter le script d'installation :**
-    Ce script va créer un environnement virtuel, installer les dépendances Python et configurer le projet.
+2.  **Run the setup script:**
+    This script will create a virtual environment, install Python dependencies, and configure the project.
     ```bash
     bash scripts/setup_env.sh
     ```
-    *Note : Le script utilise `brew` pour installer `protobuf` sur macOS. Si vous utilisez un autre système d'exploitation, vous devrez l'installer manuellement avec le gestionnaire de paquets approprié.*
+    *Note: The script uses `brew` to install `protobuf` on macOS. If you use another operating system, you will need to install it manually with the appropriate package manager.*
 
-3.  **Activer l'environnement virtuel :**
-    À chaque nouvelle session dans le terminal, n'oubliez pas d'activer l'environnement :
+3.  **Activate the virtual environment:**
+    At the start of each new terminal session, don't forget to activate the environment:
     ```bash
     source venv/bin/activate
     ```
 
-## Utilisation
+## Usage
 
-### Lancer l'application de prédiction
+### Launch the prediction application
 
-Pour démarrer l'interface web Gradio, exécutez :
+To start the Gradio web interface, run:
 ```bash
 python scripts/app.py
 ```
-Ouvrez ensuite votre navigateur à l'adresse `http://127.0.0.1:7860`.
+Then open your browser at `http://127.0.0.1:7860`.
 
-### Entraîner un nouveau modèle
+### Train a new model
 
-L'entraînement se fait en utilisant la classe `CloudsClassifier` de `src/cloudproject/classifier.py`. Vous pouvez créer un script Python ou utiliser un notebook Jupyter pour orchestrer l'entraînement.
+Training is done using the `CloudsClassifier` class from `src/cloudproject/classifier.py`. You can create a Python script or use a Jupyter notebook to orchestrate the training.
 
-Voici un exemple de code pour entraîner un modèle `ResNet50V2` :
+Here is an example code to train a `ResNet50V2` model:
 ```python
 from cloudproject import CloudsClassifier
 
-# Initialiser le classifieur avec les chemins vers les données
+# Initialize the classifier with data paths
 classifier = CloudsClassifier(
     train_dir="data/dataset/train",
     valid_dir="data/dataset/valid",
@@ -98,44 +96,44 @@ classifier = CloudsClassifier(
     batch_size=32,
 )
 
-# Construire le modèle
+# Build the model
 classifier.build_model(base_model_name="ResNet50V2", learning_rate=0.001)
 
-# Lancer l'entraînement et le fine-tuning
+# Start training and fine-tuning
 classifier.train(
     epochs=20,
     fine_tune_epochs=10,
-    model_name="MonSuperModele" # Le modèle sera sauvegardé dans models/MonSuperModele.keras
+    model_name="MySuperModel" # The model will be saved in models/MySuperModel.keras
 )
 
-# Afficher les courbes d'apprentissage
+# Display learning curves
 classifier.plot_history()
 ```
 
-### Étendre le dataset via scraping
+### Expand the dataset via scraping
 
-Pour lancer le script qui capture une image de la webcam, la classifie et enregistre le résultat :
+To run the script that captures an image from the webcam, classifies it, and saves the result:
 ```bash
 python src/cloudproject/expand_dataset.py
 ```
-*Note : Ce script nécessite un `chromedriver` compatible avec votre version de Google Chrome et accessible dans votre `PATH`.*
+*Note: This script requires a `chromedriver` compatible with your version of Google Chrome and accessible in your `PATH`.*
 
 ## Dataset
 
-Le projet s'attend à ce que les données soient structurées avec un dossier `train` et un dossier `valid`, chacun contenant les images et un fichier `_classes.csv`. Ce CSV doit mapper les noms de fichiers aux classes en utilisant un encodage one-hot.
+The project expects the data to be structured with a `train` folder and a `valid` folder, each containing images and a `_classes.csv` file. This CSV should map filenames to classes using one-hot encoding.
 
-Exemple de `_classes.csv`:
+Example `_classes.csv`:
 ```csv
-filename,Classe1,Classe2,Classe3
+filename,Class1,Class2,Class3
 image_01.jpg,1,0,0
 image_02.jpg,0,1,0
 ```
 
-## Technologies Utilisées
+## Technologies Used
 
-*   **Langage :** Python 3.11
-*   **Deep Learning :** TensorFlow / Keras
-*   **Interface Web :** Gradio
-*   **Manipulation de données :** Pandas, NumPy
-*   **Web Scraping :** Selenium
-*   **Visualisation :** Matplotlib
+*   **Language:** Python 3.11
+*   **Deep Learning:** TensorFlow / Keras
+*   **Web Interface:** Gradio
+*   **Data Manipulation:** Pandas, NumPy
+*   **Web Scraping:** Selenium
+*   **Visualization:** Matplotlib
