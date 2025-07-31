@@ -55,7 +55,7 @@ class CloudsClassifier:
 
     def _load_and_resize_image(self, path: str, label: int):
         """Charge une image depuis un chemin, la décode et la redimensionne.
-        
+
         Args:
             path (str): Chemin vers l'image.
             label (int): Label de la classe de l'image.
@@ -110,7 +110,7 @@ class CloudsClassifier:
         )
 
         return final_dataset, class_names
-    
+
     def add_model(self, name: str, model_class, preprocess_function):
         """
         Ajoute dynamiquement un nouveau modèle et sa fonction de pré-traitement au registre.
@@ -123,7 +123,6 @@ class CloudsClassifier:
         self.model_registry[name] = model_class
         self.preprocessors[model_class] = preprocess_function
         print(f"Modèle '{name}' ajouté au registre avec succès.")
-
 
     def build_model(self, base_model_name: str, learning_rate=0.001):
         """
@@ -170,7 +169,9 @@ class CloudsClassifier:
         print(f"Modèle construit avec {base_model_name} comme base.")
         self.model.summary()
 
-    def train(self, epochs=50, fine_tune_epochs=10, model_name=None, learning_rate_ft=0.001):
+    def train(
+        self, epochs=50, fine_tune_epochs=10, model_name=None, learning_rate_ft=0.001
+    ):
         """Entraîne le modèle construit."""
         if not self.model:
             raise RuntimeError(
@@ -204,7 +205,9 @@ class CloudsClassifier:
             for layer in self.base_model.layers[:fine_tune_at]:
                 layer.trainable = False
 
-            optimizer_fine_tune = tf.keras.optimizers.Adam(learning_rate=learning_rate_ft)
+            optimizer_fine_tune = tf.keras.optimizers.Adam(
+                learning_rate=learning_rate_ft
+            )
             self.model.compile(
                 optimizer=optimizer_fine_tune,
                 loss=tf.keras.losses.CategoricalCrossentropy(),
@@ -248,8 +251,10 @@ class CloudsClassifier:
             self.img_width = input_shape[2]
 
             print(f"Modèle chargé avec succès depuis {model_path}")
-            print(f"Dimensions d'entrée du modèle mises à jour : {self.img_height}x{self.img_width}")
-        
+            print(
+                f"Dimensions d'entrée du modèle mises à jour : {self.img_height}x{self.img_width}"
+            )
+
         except Exception as e:
             print(f"Erreur lors du chargement du modèle : {e}")
             raise
@@ -292,12 +297,14 @@ class CloudsClassifier:
         )
         img_array = tf.keras.utils.img_to_array(img)
         return img, img_array
-    
+
     def predict_from_array(self, img_array):
         """Effectue une prédiction sur un tableau NumPy d'image."""
         if not self.model:
-            raise RuntimeError("Le modèle n'est pas chargé. Utilisez `build_model()` ou `load_model()` d'abord.")
-        
+            raise RuntimeError(
+                "Le modèle n'est pas chargé. Utilisez `build_model()` ou `load_model()` d'abord."
+            )
+
         img_resized = tf.image.resize(img_array, [self.img_height, self.img_width])
         img_array_expanded = np.expand_dims(img_resized, axis=0)
 
