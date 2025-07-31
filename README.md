@@ -1,4 +1,4 @@
-# ☁️ Cloud Classifier ☁️
+# Cloud Classifier
 
 ## About This Project
 
@@ -53,7 +53,6 @@ A key feature is a Selenium-based script that automatically captures images from
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/corentinpradier/cloud-project.git
-    cd Clouds_classification
     ```
 
 2.  **Run the setup script:**
