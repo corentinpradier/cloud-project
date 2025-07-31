@@ -1,6 +1,12 @@
-# Classifieur de Nuages ☁️
+# ☁️ Cloud Classifier ☁️
 
-Ce projet implémente un classifieur d'images capable de reconnaître et de distinguer différents types de nuages. Il s'appuie sur des modèles de deep learning pré-entraînés (via du transfer learning) et offre une interface web interactive pour tester les prédictions sur de nouvelles images.
+## About This Project
+
+This project implements an end-to-end image classifier capable of recognizing and distinguishing different types of clouds. It leverages pre-trained deep learning models (via transfer learning) with TensorFlow and offers an interactive web interface built with Gradio to test predictions on new images.
+
+A key feature is a Selenium-based script that automatically captures images from a live webcam feed, classifies them, and saves the results, allowing the dataset to be continuously expanded.
+
+---
 
 ## Table des matières
 * [Fonctionnalités](#fonctionnalités)
@@ -9,6 +15,8 @@ Ce projet implémente un classifieur d'images capable de reconnaître et de dist
 * [Utilisation](#utilisation)
 * [Dataset](#dataset)
 * [Technologies Utilisées](#technologies-utilisées)
+
+*(La suite du README est en français)*
 
 ## Fonctionnalités
 
