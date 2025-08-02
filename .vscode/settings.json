@@ -1,9 +1,12 @@
 {
-    "taskButtons.buttons": [
-        {
-            "label": "$(sync) Update cloudproject",
-            "tooltip": "Exécute la tâche 'Update cloudproject' (pip install -e .)",
-            "task": "Update cloudproject"
-        }
+    "VsCodeTaskButtons.showCounter": true,
+    "VsCodeTaskButtons.tasks" : [
+    {
+        "label": "Update cloudproject",
+        "task": "Update cloudproject",
+        "description": "A description of the task when viewing the task list in the Quick Pick Menu",
+        "color": "warning"
+    }
+
     ]
 }
