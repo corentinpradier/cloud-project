@@ -24,7 +24,7 @@ IMG_HEIGHT = 200
 IMG_WIDTH = 200
 BATCH_SIZE = 32
 MODEL_NAME = "ResNet50V2"
-MODEL_PATH = f"{MODEL_NAME}.keras"
+MODEL_PATH = BASE_DIR / "models" / f"{MODEL_NAME}.keras"
 
 
 def initialize_classifier() -> CloudsClassifier:

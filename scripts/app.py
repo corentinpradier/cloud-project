@@ -1,12 +1,18 @@
 import gradio as gr
-from clouds_classifier import CloudsClassifier
+from pathlib import Path
+from cloudproject import CloudsClassifier
 
-TRAIN_DIR = "data/dataset/train"
-VALID_DIR = "data/dataset/valid"
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
+TRAIN_DIR = DATA_DIR / "dataset/train"
+VALID_DIR = DATA_DIR / "dataset/valid"
+
+MODEL_NAME = "ResNet50V2"
+MODEL_PATH = BASE_DIR / "models" / f"{MODEL_NAME}.keras"
+
 IMG_HEIGHT = 200
 IMG_WIDTH = 200
 BATCH_SIZE = 32
-MODEL_PATH = "ResNet50V2.keras"
 
 print("Initialisation du classifieur...")
 try:
@@ -63,9 +69,9 @@ iface = gr.Interface(
     title="☁️ Classifieur de Nuages ☁️",
     description="Téléchargez une image d'un nuage et le modèle prédira de quel type il s'agit. Cette démo utilise un modèle pré-entraîné.",
     examples=[
-        ["dataset/valid/Ac-8-_jpg.rf.382636684b876860c5a61aa85238104d.jpg"],
-        ["dataset/valid/Sc-63-_jpg.rf.6b946a6cda82df3d5e9b3175181896f8.jpg"],
-        ["dataset/valid/Cu-N133_jpg.rf.8b7d11e0036d5a3cf3bbe4084c2a1cf4.jpg"],
+        [BASE_DIR / "data" / "dataset" / "valid" / "Ac-8-_jpg.rf.382636684b876860c5a61aa85238104d.jpg"],
+        [BASE_DIR / "data" / "dataset" / "valid" / "Sc-63-_jpg.rf.6b946a6cda82df3d5e9b3175181896f8.jpg"],
+        [BASE_DIR / "data" / "dataset" / "valid" / "Cu-N133_jpg.rf.8b7d11e0036d5a3cf3bbe4084c2a1cf4.jpg"],
     ],
     flagging_mode="never",
 )

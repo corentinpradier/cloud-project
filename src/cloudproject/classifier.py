@@ -243,8 +243,7 @@ class CloudsClassifier:
             model_path (str): Chemin vers le fichier du modèle sauvegardé.
         """
         try:
-            full_model_path = os.path.join("..", "models", model_path)
-            self.model = tf.keras.models.load_model(full_model_path)
+            self.model = tf.keras.models.load_model(model_path)
 
             input_shape = self.model.input_shape
             self.img_height = input_shape[1]
