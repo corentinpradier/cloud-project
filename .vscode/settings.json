@@ -1,0 +1,9 @@
+{
+    "taskButtons.buttons": [
+        {
+            "label": "$(sync) Update cloudproject",
+            "tooltip": "Exécute la tâche 'Update cloudproject' (pip install -e .)",
+            "task": "Update cloudproject"
+        }
+    ]
+}

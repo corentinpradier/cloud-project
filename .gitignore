@@ -203,6 +203,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Local configuration files
+data/scraped/
 models/
 logs/
 .DS_Store
