@@ -1,8 +1,10 @@
-pandas
-numpy
-matplotlib
-selenium
+beautifulsoup4
 gradio
+matplotlib
+numpy
+pandas
 Pillow
+requests
+selenium
 tensorflow
 # protobuf>=3.20.3,<6.0.0
