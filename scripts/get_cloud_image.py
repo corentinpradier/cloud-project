@@ -4,12 +4,17 @@ from pathlib import Path
 
 import pandas as pd
 from PIL import Image
-
-from cloudproject import CloudsClassifier, scraping
+from cloudproject import CloudsClassifier, search_image_urls, url_to_image
 
 # --- Constantes ---
-URL = "https://g0.ipcamlive.com/player/player.php?alias=613202904e8bf&autoplay=1"
-URL = "http://meteosandillon.fr/photo.jpg"
+# Liste des requêtes de recherche pour trouver des images de nuages.
+SEARCH_QUERIES = [
+    "altocumulus clouds",
+    # "cirrus clouds",
+    # "stratocumulus clouds",
+    # "cumulus clouds sunny day",
+]
+MAX_IMAGES_PER_QUERY = 5  # Nombre max d'images à traiter par requête
 
 # Définir un chemin de base pour rendre le script plus portable
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,30 +47,25 @@ def initialize_classifier() -> CloudsClassifier:
     return classifier
 
 
-def process_and_save_image(image: Image.Image) -> Path:
-    """Recadre et sauvegarde l'image, puis retourne le chemin du fichier sauvegardé."""
-    # S'assurer que le dossier de destination existe
-    SCRAPED_DIR.mkdir(parents=True, exist_ok=True)
+# def save_scraped_image(image: Image.Image) -> Path:
+#     """Sauvegarde l'image et retourne son chemin."""
+#     # S'assurer que le dossier de destination existe
+#     SCRAPED_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Définir la boîte de recadrage (un carré sur le côté droit)
-    width, height = image.size
-    crop_box = (width - height, 0, width, height)
+#     # Sauvegarder l'image avec un horodatage unique
+#     time_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
+#     image_path = SCRAPED_DIR / f"nuage_{time_stamp}.png"
+#     # On sauvegarde l'image telle quelle, sans recadrage.
+#     # Le modèle s'occupera de la redimensionner correctement.
+#     image.save(image_path)
+#     print(f"Image sauvegardée avec succès : {image_path}")
 
-    # Utiliser la fonction de recadrage générique
-    cropped_image = image.crop(crop_box)
-
-    # Sauvegarder l'image recadrée avec un horodatage
-    time_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    image_path = SCRAPED_DIR / f"nuage_{time_stamp}.png"
-    cropped_image.save(image_path)
-    print(f"Image recadrée sauvegardée avec succès : {image_path}")
-
-    return image_path
+#     return image_path
 
 
-def log_prediction(image_path: Path, prediction: str):
+def log_prediction(filename: str, prediction: str):
     """Enregistre le résultat de la prédiction dans un fichier CSV."""
-    new_row = {"image_name": image_path.name, "prediction": prediction}
+    new_row = {"image_name": filename, "prediction": prediction}
 
     try:
         df = pd.read_csv(PREDICTIONS_CSV)
@@ -78,23 +78,40 @@ def log_prediction(image_path: Path, prediction: str):
 
 
 def main():
-    """Logique principale du script pour scraper, classifier et enregistrer une image de nuage."""
+    """
+    Logique principale pour rechercher, télécharger, classifier et enregistrer
+    des images de nuages depuis un moteur de recherche.
+    """
     classifier = initialize_classifier()
 
-    print(f"Scraping de l'image depuis : {URL}")
-    image = scraping(URL)
+    for query in SEARCH_QUERIES:
+        print("-" * 50)
+        print(f"Lancement de la recherche d'images pour la requête : '{query}'")
 
-    if image:
-        image_path = process_and_save_image(image)
+        # 1. Fonction de récupération qui cherche et télécharge les images
+        urls = search_image_urls(query, max_images=MAX_IMAGES_PER_QUERY)
 
-        print("Prédiction du type de nuage...")
-        predicted_class, confidence = classifier.predict(str(image_path), show_image=False)
-        print(f"-> Prédiction : {predicted_class} (Confiance : {confidence:.2f}%)")
+        images, filenames = url_to_image(urls, save=True, save_path=str(SCRAPED_DIR))
 
-        log_prediction(image_path, predicted_class)
-    else:
-        print("Échec de la récupération de l'image.")
+        if not images:
+            print(f"Aucune image n'a pu être téléchargée pour '{query}'.")
+            continue
 
+        print(f"\n--- Traitement des {len(images)} images téléchargées pour '{query}' ---")
+        # 2. Boucle qui traite chaque image, la classe et enregistre le résultat
+        for i, image in enumerate(images):
+            try:
+                print(f"\nTraitement de l'image {i+1}/{len(images)}...")
+
+                print("Prédiction du type de nuage...")
+                predicted_class, confidence = classifier.predict(SCRAPED_DIR / filenames[i], show_image=False)
+                print(f"-> Prédiction : {predicted_class} (Confiance : {confidence:.2f}%)")
+                log_prediction(filenames[i], predicted_class)
+            except Exception as e:
+                print(f"Erreur lors du traitement d'une image pour la requête '{query}': {e}")
+        time.sleep(5)  # Pause plus longue entre les requêtes pour éviter de surcharger
+
+    print("-" * 50)
     print("Script terminé.")
 
 
