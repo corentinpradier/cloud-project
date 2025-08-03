@@ -36,16 +36,17 @@ A key feature is a Selenium-based script that automatically captures images from
 ├── models/               # Saved trained models (e.g., ResNet50V2.keras)
 ├── scripts/
 │   ├── app.py            # Gradio application launch script
-│   └── setup_env.sh      # Environment setup script
+│   └── setup_env.sh      # Environment setup script (Linux, MacOS)
+│   └── setup_env.bat     # Environment setup script (Windows)
 ├── src/
 │   └── cloudproject/
 │       ├── __init__.py
-│       ├── classifier.py     # Main classifier class
-│       └── expand_dataset.py # Scraping script to expand the dataset
+│       ├── classifier.py
+│       └── scraping.py
 ├── .gitignore
-├── README.md             # This file
-├── requirements.txt      # Python dependencies
-└── setup.py              # Local package configuration file (optional)
+├── README.md     
+├── requirements.txt
+└── setup.py
 ```
 
 ## Installation
@@ -57,8 +58,14 @@ A key feature is a Selenium-based script that automatically captures images from
 
 2.  **Run the setup script:**
     This script will create a virtual environment, install Python dependencies, and configure the project.
+
+    Linux/MacOS :
     ```bash
-    bash scripts/setup_env.sh
+    ./scripts/setup_env.sh
+    ```
+    Windows :
+    ```bash
+    ./scripts/setup_env.bat
     ```
     *Note: The script uses `brew` to install `protobuf` on macOS. If you use another operating system, you will need to install it manually with the appropriate package manager.*
 
@@ -113,7 +120,7 @@ classifier.plot_history()
 
 To run the script that captures an image from the webcam, classifies it, and saves the result:
 ```bash
-python src/cloudproject/expand_dataset.py
+python scripts/get_cloud_image.py
 ```
 *Note: This script requires a `chromedriver` compatible with your version of Google Chrome and accessible in your `PATH`.*
 
@@ -121,7 +128,7 @@ python src/cloudproject/expand_dataset.py
 
 The project expects the data to be structured with a `train` folder and a `valid` folder, each containing images and a `_classes.csv` file. This CSV should map filenames to classes using one-hot encoding.
 
-Example `_classes.csv`:
+Example `predictions.csv`:
 ```csv
 filename,Class1,Class2,Class3
 image_01.jpg,1,0,0
